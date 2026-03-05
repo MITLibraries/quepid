@@ -1,32 +1,26 @@
-<!--- Provide a general summary of your changes in the Title above -->
+#### Developer
 
-## Description
-<!--- Describe your changes in detail -->
+- [ ] All new ENV is documented in README
+- [ ] All new ENV has been added to Heroku Pipeline, Staging and Prod
+- [ ] ANDI or Wave has been run in accordance to
+      [our guide](https://mitlibraries.github.io/guides/basics/a11y.html) and
+      all issues introduced by these changes have been resolved or opened as new
+      issues (link to those issues in the Pull Request details above)
+- [ ] Stakeholder approval has been confirmed (or is not needed)
 
-## Motivation and Context
-<!--- Why is this change required? What problem does it solve? -->
-<!--- If it fixes an open issue, please link to the issue here. -->
+#### Code Reviewer
 
-## How Has This Been Tested?
-<!--- Please describe in detail how you tested your changes. -->
-<!--- Include details of your testing environment, and the tests you ran to -->
-<!--- see how your change affects other areas of the code, etc. -->
+- [ ] The commit message is clear and follows our guidelines
+      (not just this pull request message)
+- [ ] There are appropriate tests covering any new functionality
+- [ ] The documentation has been updated or is unnecessary
+- [ ] The changes have been verified
+- [ ] New dependencies are appropriate or there were no changes
 
-## Screenshots or GIFs (if appropriate):
+#### Requires database migrations?
 
-## Types of changes
-<!--- What types of changes does your code introduce? Put an `x` in all the boxes that apply: -->
-- [] Bug fix (non-breaking change which fixes an issue)
-- [] Improvement (non-breaking change which improves existing functionality)
-- [] New feature (non-breaking change which adds new functionality)
-- [] Breaking change (fix or feature that would cause existing functionality to change)
+YES | NO
 
-## Checklist:
-<!--- Go over all the following points, and put an `x` in all the boxes that apply. -->
-<!--- If you're unsure about any of these, don't hesitate to ask. We're here to help! -->
-- [] My code follows the code style of this project.
-- [] My change requires a change to the documentation.
-- [] I have updated the documentation accordingly.
-- [] I have read the **CONTRIBUTING** document.
-- [] I have added tests to cover my changes.
-- [] All new and existing tests passed.
+#### Includes new or updated dependencies?
+
+YES | NO
