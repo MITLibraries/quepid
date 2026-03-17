@@ -23,4 +23,4 @@ test:
 
 production:
   <<: *default
-  url: <%= ENV["DATABASE_URL"] %>
+  url: <%= ENV["DATABASE_URL"].presence || "mysql2://#{ENV["DB_USERNAME"]}:#{ENV["DB_PASSWORD"]}@#{ENV["DB_HOST"]}:3306/#{ENV["DB_NAME"]}" %>
