@@ -235,6 +235,10 @@ Resources:
               Value: production
             - Name: SECRET_KEY_BASE
               Value: fake_out_devise
+            - Name: ALB_OIDC_ENABLED
+              Value: false
+            - Name: ALB_OIDC_VERIFY_SIGNATURE
+              Value: false
           RepositoryCredentials:
             CredentialsParameter: !Ref DockerHubSecret
 

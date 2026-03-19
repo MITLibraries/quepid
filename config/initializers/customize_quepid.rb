@@ -86,6 +86,11 @@ Rails.application.config.google_client_secret = ENV.fetch('GOOGLE_CLIENT_SECRET'
 Rails.application.config.keycloak_realm = ENV.fetch('KEYCLOAK_REALM', '')
 Rails.application.config.keycloak_site = ENV.fetch('KEYCLOAK_SITE', '')
 
+# == ALB OIDC Settings =
+# AWS ALB authentication with OIDC provider (e.g., Okta)
+Rails.application.config.alb_oidc_enabled = bool.deserialize(ENV.fetch('ALB_OIDC_ENABLED', false))
+Rails.application.config.alb_oidc_verify_signature = bool.deserialize(ENV.fetch('ALB_OIDC_VERIFY_SIGNATURE', false))
+
 # == Domain Quepid is Running Under
 # Certain features, like sending emails and Google Analytics require you to set the domain that Quepid
 # is set up under.

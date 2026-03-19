@@ -2,7 +2,7 @@
 
 module Users
   class OmniauthCallbacksController < Devise::OmniauthCallbacksController
-    skip_before_action :require_login, only: [ :keycloakopenid, :google_oauth2, :failure ]
+    skip_before_action :require_login, only: [ :keycloakopenid, :google_oauth2, :alb_oidc, :failure ]
 
     # rubocop:disable Metrics/AbcSize
     def keycloakopenid
@@ -45,6 +45,25 @@ module Users
       end
     end
     # rubocop:enable Metrics/AbcSize
+
+    def alb_oidc
+      Rails.logger.debug(request.env['omniauth.auth'])
+      @user = create_user_from_omniauth(request.env['omniauth.auth'])
+      @user.errors.add(:base, "Can't log in a locked user." ) if @user.locked
+      if @user.persisted? & !@user.locked
+        session[:current_user_id] = @user.id # this populates our session variable.
+
+        # in this flow, we have a new user joining, so we create a empty case for them, which
+        # on the core_controller.rb triggers the bootstrap and the new case wizard.
+        @user.cases.build case_name: "Case #{@user.cases.size}"
+
+        redirect_to root_path
+      else
+        Rails.logger.warn('user not persisted, what do we need to do?')
+        session['devise.alb_oidc_data'] = request.env['omniauth.auth']
+        redirect_to new_session # new_user_registration_url
+      end
+    end
 
     def failure
       redirect_to root_path, alert: 'Could not sign user in with OAuth provider.'

@@ -337,6 +337,12 @@ Devise.setup do |config|
                     client_options: { ssl: { verify: !Rails.env.development? } },
                     strategy_class: OmniAuth::Strategies::GoogleOauth2
   end
+
+  if Rails.application.config.alb_oidc_enabled
+    config.omniauth :alb_oidc,
+                    verify_signature: Rails.application.config.alb_oidc_verify_signature,
+                    strategy_class: OmniAuth::Strategies::AlbOidc
+  end
 end
 
 Rails.application.config.to_prepare do

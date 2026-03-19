@@ -45,6 +45,7 @@ This guide provides detailed instructions for developers who want to set up, run
   - [How to run and test a local production build](#how-to-run-and-test-a-local-production-build)
   - [How to test SSL](#how-to-test-ssl)
   - [How to test OpenID Auth](#how-to-test-openid-auth)
+  - [How to test AWS ALB OIDC Authentication](#how-to-test-aws-alb-oidc-authentication)
   - [How to use the latest unreleased version via Docker](#how-to-use-the-latest-unreleased-version-via-docker)
   - [Modifying the database](#modifying-the-database)
   - [Updating RubyGems](#updating-rubygems)
@@ -618,6 +619,113 @@ The below steps are only if you want to customize the setup, and for basic testi
    When clicked, it will redirect you to the Keycloak login page.
 
 For production deployments, you would typically configure Quepid to use your organization's existing OIDC provider (like Okta, Auth0, Azure AD, etc.) rather than Keycloak.
+
+## How to test AWS ALB OIDC Authentication
+
+Quepid supports authentication via AWS Application Load Balancer (ALB) with OIDC providers (e.g., Okta, Auth0, Azure AD). This is typically used in production environments where the ALB handles the OIDC authentication flow and injects user identity headers into requests.
+
+### Architecture Overview
+
+When ALB is configured with OIDC:
+1. User requests application through ALB
+2. ALB authenticates user with OIDC provider
+3. ALB injects authenticated user headers:
+   - `X-Amzn-Oidc-Data`: JWT containing OIDC claims (sub, email, name, picture, etc.)
+   - `X-Amzn-Oidc-Accesstoken`: Access token from OIDC provider
+   - `X-Amzn-Oidc-Identity`: User identity string
+4. Quepid receives request with these headers and authenticates user automatically
+
+### Local Development Testing
+
+To simulate ALB OIDC authentication locally without a real ALB:
+
+1. **Enable ALB OIDC in your environment**:
+
+   Set environment variables:
+   ```bash
+   ALB_OIDC_ENABLED=true
+   ALB_OIDC_VERIFY_SIGNATURE=false  # Set to true in production for security
+   ```
+
+2. **Mock ALB Headers (for testing)**:
+
+   You can test ALB authentication by manually setting the headers. Here's an example curl request:
+
+   ```bash
+   # Generate a test JWT (must be valid JSON but doesn't need real signature in dev)
+   export JWT='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiZW1haWwiOiJqb2huQGV4YW1wbGUuY29tIiwicGljdHVyZSI6Imh0dHBzOi8vZXhhbXBsZS5jb20vcGhvdG8uanBnIn0.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ'
+
+   curl -H "X-Amzn-Oidc-Data: $JWT" \
+        -H "X-Amzn-Oidc-Accesstoken: test-access-token" \
+        http://localhost:3000/
+   ```
+
+3. **Using Docker Compose Override**:
+
+   Create a `docker-compose.override.yml` file:
+   ```yaml
+   version: '3.8'
+   services:
+     app:
+       environment:
+         ALB_OIDC_ENABLED: 'true'
+         ALB_OIDC_VERIFY_SIGNATURE: 'false'
+   ```
+
+4. **How Authentication Works**:
+
+   - Quepid middleware detects `X-Amzn-Oidc-Data` header
+   - JWT is decoded to extract OIDC claims
+   - User is looked up by email or created if signup is enabled
+   - User session is established automatically
+   - No login page redirect needed
+
+### Production Deployment
+
+For production with real ALB OIDC:
+
+1. **Configure ALB with OIDC Provider**:
+   - In AWS ALB listener rules, configure OIDC authentication
+   - Point to your OIDC provider (Okta, Auth0, Azure AD, etc.)
+   - Set ALB to inject OIDC headers
+
+2. **Set Environment Variables**:
+   ```bash
+   ALB_OIDC_ENABLED=true
+   ALB_OIDC_VERIFY_SIGNATURE=true  # Verify JWT signatures in production
+   ```
+
+3. **Important Notes**:
+   - ALB must be the only entry point (private subnet)
+   - JWT signature verification ensures headers haven't been tampered with
+   - User email from OIDC claims is used for identification
+   - Users are created automatically if `SIGNUP_ENABLED=true`
+   - If `SIGNUP_ENABLED=false`, only pre-existing users can authenticate
+
+### Troubleshooting
+
+**ALB authentication not working:**
+- Verify `ALB_OIDC_ENABLED=true` in logs
+- Check Rails logs for JWT decoding errors
+- Ensure `X-Amzn-Oidc-Data` header is present in requests
+- For development, set `ALB_OIDC_VERIFY_SIGNATURE=false` until keys are configured
+
+**User not created:**
+- If `SIGNUP_ENABLED=false`, confirm user exists in database
+- Check email claim in JWT matches user's email in database
+- Verify user is not locked
+
+**JWT decode errors:**
+- Ensure JWT format is valid (three base64 parts separated by dots)
+- Check that `ALB_OIDC_VERIFY_SIGNATURE=false` in development
+- In production, verify AWS public keys are being fetched correctly
+
+### Coexistence with OmniAuth Providers
+
+ALB OIDC authentication coexists with traditional OmniAuth providers (Keycloak, Google):
+- In production with ALB: ALB handles auth → no OmniAuth needed
+- In development without ALB: Traditional OmniAuth login works
+- Environment gating: When ALB headers present, ALB auth takes precedence
 
 ## How to use the latest unreleased version via Docker
 
