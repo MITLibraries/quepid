@@ -86,6 +86,16 @@ Rails.application.config.google_client_secret = ENV.fetch('GOOGLE_CLIENT_SECRET'
 Rails.application.config.keycloak_realm = ENV.fetch('KEYCLOAK_REALM', '')
 Rails.application.config.keycloak_site = ENV.fetch('KEYCLOAK_SITE', '')
 
+# == OpenID Connect Settings =
+# This value should be the protocol and domain that Quepid is running under, e.g. https://example.com or http://localhost:3000
+Rails.application.config.openid_connect_base_url = ENV.fetch('OPENID_CONNECT_BASE_URL', '')
+# Provided by your OpenID Connect provider when you register your application with them. It should be kept secret and not shared with anyone.
+Rails.application.config.openid_connect_client_id = ENV.fetch('OPENID_CONNECT_CLIENT_ID', '')
+# The client secret is a secret string that is used to authenticate the application with the OpenID Connect provider. It is required for OpenID Connect authentication to work. It is provided by your OpenID Connect provider when you register your application with them. It should be kept secret and not shared with anyone.
+Rails.application.config.openid_connect_client_secret = ENV.fetch('OPENID_CONNECT_CLIENT_SECRET', '')
+# The issuer is the URL of the OpenID Connect provider. It is often found in the discovery document of the provider, and is often the same as the base URL of the provider, but not always. It is required for OpenID Connect authentication to work.
+Rails.application.config.openid_connect_issuer = ENV.fetch('OPENID_CONNECT_ISSUER', '')
+
 # == Domain Quepid is Running Under
 # Certain features, like sending emails and Google Analytics require you to set the domain that Quepid
 # is set up under.

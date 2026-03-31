@@ -2,7 +2,7 @@
 
 module Users
   class OmniauthCallbacksController < Devise::OmniauthCallbacksController
-    skip_before_action :require_login, only: [ :keycloakopenid, :google_oauth2, :failure ]
+    skip_before_action :require_login, only: [ :keycloakopenid, :google_oauth2, :failure, :openid_connect ]
 
     def keycloakopenid
       Rails.logger.debug(request.env['omniauth.auth'])
@@ -40,6 +40,30 @@ module Users
       else
         # Removing extra as it can overflow some session stores
         session['devise.google_data'] = request.env['omniauth.auth'].except('extra')
+        redirect_to root_path, alert: @user.errors.full_messages.join("\n") if @user
+      end
+    end
+
+    def openid_connect
+      Rails.logger.info "OpenID Connect callback with env: #{request.env['omniauth.auth']}"
+      @user = create_user_from_omniauth(request.env['omniauth.auth'])
+      Rails.logger.info "User created from OpenID Connect: #{@user.inspect}"
+
+      @user.errors.add(:base, "Can't log in a locked user." ) if @user.locked
+      Rails.logger.info "User errors after checking for locked status: #{@user.errors.full_messages.join(', ')}"
+
+      if @user.errors.empty?
+        session[:current_user_id] = @user.id # this populates our session variable.
+
+        # in this flow, we have a new user joining, so we create a empty case for them, which
+        # on the core_controller.rb triggers the bootstrap and the new case wizard.
+        @user.cases.build case_name: "Case #{@user.cases.size}"
+
+        redirect_to root_path
+        # sign_in_and_redirect @user, event: :authentication
+      else
+        # Removing extra as it can overflow some session stores
+        session['devise.openid_connect_data'] = request.env['omniauth.auth'].except('extra')
         redirect_to root_path, alert: @user.errors.full_messages.join("\n") if @user
       end
     end
