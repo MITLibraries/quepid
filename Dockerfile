@@ -28,7 +28,8 @@ ENV RAILS_ENV="production" \
     BUNDLE_DEPLOYMENT="1" \
     BUNDLE_PATH="/usr/local/bundle" \
     BUNDLE_WITHOUT="development test" \
-    LD_PRELOAD="/usr/local/lib/libjemalloc.so"
+    LD_PRELOAD="/usr/local/lib/libjemalloc.so" \
+    DOCKER_CONTAINER=true
 
 # Throw-away build stage to reduce size of final image
 FROM base AS build
@@ -46,7 +47,7 @@ RUN curl -sL https://github.com/nodenv/node-build/archive/master.tar.gz | tar xz
     /tmp/node-build-master/bin/node-build "${NODE_VERSION}" /usr/local/node && \
     npm install -g yarn@$YARN_VERSION && \
     rm -rf /tmp/node-build-master
-    
+
 # Install application gems
 RUN gem install foreman
 COPY Gemfile Gemfile.lock vendor ./
