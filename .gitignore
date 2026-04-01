@@ -88,3 +88,6 @@ claude-swarm.log
 
 /node_modules
 *.patch
+
+# For MITL workflows, ignore build artifact
+.arch_tag
