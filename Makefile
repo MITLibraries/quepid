@@ -4,6 +4,12 @@ ECR_URL_DEV := 222053980223.dkr.ecr.us-east-1.amazonaws.com/quepid-dev
 CPU_ARCH ?= $(shell cat .aws-architecture 2>/dev/null || echo "linux/amd64")
 ### End of Terraform-generated header
 
+.PHONY: help dist-dev publish-dev docker-clean service-redeploy-dev service-redeploy-stage service-redeploy-prod
+
+help: ## Print this message
+	@awk 'BEGIN { FS = ":.*##"; print "Usage:  make <target>\n\nTargets:" } \
+		/^[-_[:alpha:]]+:.?*##/ { printf "  %-15s%s\n", $$1, $$2 }' $(MAKEFILE_LIST)
+
 ### Terraform-generated Developer Deploy Commands for Dev environment ###
 check-arch:
 	@ARCH_FILE=".aws-architecture"; \
@@ -47,3 +53,25 @@ docker-clean: ## Clean up Docker detritus
     docker rmi -f $(ECR_NAME_DEV):$$ARCH_TAG || true; \
 	docker buildx rm $(ECR_NAME_DEV) || true
 	@rm -rf .arch_tag
+
+### After a container is deployed via GHA to ECR in an AWS Account, the service will
+### need to be redeployed to pick up the new container. The command below assumes that
+### the user has already authenticated to the appropriate AWS account using the 
+### QuepidManagers IdC role.
+service-redeploy-dev: ## Redeploy the quepid service in Dev1 to use latest image from ECR 
+	aws ecs update-service \
+		--cluster $$(aws ecs list-clusters --output text | grep quepid-ecs-dev | cut -d'/' -f2) \
+		--service $$(aws ecs list-services --cluster $$(aws ecs list-clusters --output text | grep quepid-ecs-dev | cut -d'/' -f2) \--output text | grep quepid | cut -d'/' -f3) \
+		--force-new-deployment
+
+service-redeploy-stage: ## Redeploy the quepid service in Stage-Workloads to use latest image from ECR
+	aws ecs update-service \
+		--cluster $$(aws ecs list-clusters --output text | grep quepid-ecs-stage | cut -d'/' -f2) \
+		--service $$(aws ecs list-services --cluster $$(aws ecs list-clusters --output text | grep quepid-ecs-stage | cut -d'/' -f2) \--output text | grep quepid | cut -d'/' -f3) \
+		--force-new-deployment
+
+service-redeploy-prod: ## Redeploy the quepid service in Stage-Workloads to use latest image from ECR
+	aws ecs update-service \
+		--cluster $$(aws ecs list-clusters --output text | grep quepid-ecs-prod | cut -d'/' -f2) \
+		--service $$(aws ecs list-services --cluster $$(aws ecs list-clusters --output text | grep quepid-ecs-prod | cut -d'/' -f2) \--output text | grep quepid | cut -d'/' -f3) \
+		--force-new-deployment
