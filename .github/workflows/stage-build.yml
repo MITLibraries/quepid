@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - main
+      - mit-main
     paths-ignore:
       - '.github/**'
 
