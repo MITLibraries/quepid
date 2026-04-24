@@ -237,7 +237,7 @@ GEM
       sorbet-runtime (>= 0.5)
     email_validator (2.2.4)
       activemodel
-    erb (6.0.1)
+    erb (6.0.1.1)
     erubi (1.13.1)
     et-orbi (1.4.0)
       tzinfo
